@@ -1,0 +1,3 @@
+[submodule "gamer"]
+	path = gamer
+	url = https://github.com/cassidymwagner/gamer
