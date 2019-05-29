@@ -18,6 +18,12 @@ rule compile:
 	'gamer/src/gamer'
     shell: 'cd gamer/src; make -j; cp gamer /dpool/cwagner4/working/gamer_sims/driv_turbulence'
 
+# download initial conditions, created from external python script [WILL ADD SCRIPT AND ORIGINAL DATA]
+rule download:
+    input:
+        'UM_IC',
+    shell: 'yt download UM_IC' # may not be updated file, but okay for now
+
 # run templating function to create template files
 driving_amps = list(np.arange(1,11))
 rule template:
