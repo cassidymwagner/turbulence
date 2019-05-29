@@ -29,8 +29,7 @@ driving_amps = list(np.arange(1,11))
 rule template:
     run:
         for amp in driving_amps:
-           	print("driven_amp"+str(amp)) 
-		create_templates( {'driven_amp': float(amp)}, dest_path = ("initialize/templates/driven_amp" + str(amp)) ) 
+		create_templates( {'driven_amp': float(amp)}, dest_path = ("templates/driven_amp" + str(amp).zfill(5)) ) 
 
 # run gamer based on all template files and move the output data to the appropriate directory
 rule gamer:
