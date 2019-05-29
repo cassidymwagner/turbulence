@@ -22,11 +22,15 @@ rule compile:
 rule IC:
     input:
         'UM_IC',
-    shell: 'curl -J0 http://use.yt/upload/87c5830b' 
+    shell: 'curl -JO http://use.yt/upload/87c5830b' 
 
 # download initial conditions from Kritsuk 2011
 rule raw:
-    shell: 'curl -J0 http://use.yt/upload/06d80397'
+    shell: 'curl -JO http://use.yt/upload/06d80397'
+
+# convert initial conditions into gamer format
+rule format:
+    shell: 'python /home/cwagner4/working/research_group/turbulence/convert_to_gamer_format.py' 
 
 # run templating function to create template files
 driving_amps = list(np.arange(1,11))

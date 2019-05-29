@@ -28,6 +28,10 @@ rule IC:
 rule raw:
     shell: 'curl -J0 http://use.yt/upload/06d80397'
 
+# convert initial conditions into gamer format
+rule format:
+    shell: 'python /home/cwagner4/working/research_group/turbulence/convert_to_gamer_format.py' 
+
 # run templating function to create template files
 driving_amps = list(np.arange(1,11))
 rule template:
