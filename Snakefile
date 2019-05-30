@@ -30,7 +30,7 @@ rule compile:
     input:
         'gamer/src/Makefile'
     output:
-        'gamer/bin/gamer'
+        'gamer/src/gamer'
     run: 
         shell('make -j -C gamer/src')
 
@@ -53,7 +53,9 @@ rule template:
 
 # cd to appropriate directory and run gamer based on all template files
 rule gamer:
-    input: "initialize/templates/driven_amp{:05}".format(amp) for amp in driving_amps
+    input: 
+        directories=("initialize/templates/driven_amp{:05}".format(amp) for amp in driving_amps),
+        gamer='gamer/src/gamer'
     run:
-        for dir in input:
-            shell('cd {dir}; ./../../gamer')
+        for dir in input.directories:
+            shell('cd {dir}; ./../../../{input.gamer}')
