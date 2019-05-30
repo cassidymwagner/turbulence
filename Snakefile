@@ -9,7 +9,6 @@ import convert_to_gamer_format
 
 HTTP = HTTPRemoteProvider()
 
-# run templating function to create template files
 driving_amps = list(np.arange(1,11))
 
 def create_templates(parameters, dest_path):
@@ -44,15 +43,17 @@ rule generate_ic:
     run:
         convert_to_gamer_format.convert(input[0], output[0])
 
+# run templating function to create template files
 rule template:
     run:
         for amp in driving_amps:
-            print("driven_amp{:05}".format(amp))
             dest_path = os.path.join("initialize", "templates",
                 "driven_amp{:05}".format(amp) )
             create_templates( {'driven_amp': float(amp)}, dest_path = dest_path)
 
-# run gamer based on all template files and move the output data to the appropriate directory
+# cd to appropriate directory and run gamer based on all template files
 rule gamer:
+    input: "initialize/templates/driven_amp{:05}".format(amp) for amp in driving_amps
     run:
-        shell('for VARIABLE in {{00001..00010}}; do cp templates/driven_amp$VARIABLE/Input__TestProb .; ./gamer; mv Data* Diag* Record* templates/driven_amp$VARIABLE; done')
+        for dir in input:
+            shell('cd {dir}; ./../../gamer')
