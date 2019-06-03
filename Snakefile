@@ -6,10 +6,12 @@ from snakemake.remote.HTTP import RemoteProvider as HTTPRemoteProvider
 
 sys.path.insert(0, 'scripts_and_testing')
 import convert_to_gamer_format
+import post_processing
 
 HTTP = HTTPRemoteProvider()
 
-driving_amps = list(np.arange(1,11))
+driving_amps = list(10**(np.linspace(-5,5,11)))
+fields = ['density','velocity_magnitude']
 
 def create_templates(parameters, dest_path):
     for fn in glob.glob("initialize/*.template"):
@@ -59,3 +61,28 @@ rule gamer:
     run:
         for dir in input.directories:
             shell('cd {dir}; ./../../../{input.gamer}')
+
+# make diagnostic plots
+rule plots:
+    input:
+        directories=("initialize/templates/driven_amp{:05}".format(amp) for amp in driving_amps),
+    run:
+        for dir in input.directories:
+            try:
+                print("Making phase plots for the Mach number.")
+                post_processing.mach_number(path=dir, idx_start=1, idx_end=100, didx=1)
+
+            except OSError:
+                print("Out of data, moving to next sim.")
+                pass
+            
+            for i in fields:
+                for j in ['x','y','z']:
+                    try:
+                        print("Making slice plots for "+str(i)+" along the "+str(j)+" axis.")
+                        post_processing.slice_plot(path=dir, field = i, axis = j, 
+                                                   idx_start=1, idx_end=100, didx=1) 
+                    except OSError:
+                        print("Out of data, moving to next sim.")
+                        pass 
+           
