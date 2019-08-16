@@ -6,10 +6,15 @@ from snakemake.remote.HTTP import RemoteProvider as HTTPRemoteProvider
 
 sys.path.insert(0, 'scripts_and_testing')
 import convert_to_gamer_format
+import post_processing
 
 HTTP = HTTPRemoteProvider()
 
-driving_amps = list(np.arange(1,11))
+driving_amps = list(10**(np.linspace(-5,5,11)))
+fields = ['density','velocity_magnitude','mach_number']
+filenames = ['2d-Profile_density_mach_number_cell_mass','Slice_x_density','Slice_x_velocity_magnitude',
+             'Slice_x_mach_number','Slice_y_density','Slice_y_velocity_magnitude','Slice_y_mach_number',
+             'Slice_z_density','Slice_z_velocity_magnitude','Slice_z_mach_number']
 
 def create_templates(parameters, dest_path):
     for fn in glob.glob("initialize/*.template"):
@@ -54,8 +59,56 @@ rule template:
 # cd to appropriate directory and run gamer based on all template files
 rule gamer:
     input: 
-        directories=("initialize/templates/driven_amp{:05}".format(amp) for amp in driving_amps),
+        directories=("initialize/templates/driven_amp{:05}".format(amp) for amp in driving_amps[11:]),
         gamer='gamer/src/gamer'
     run:
         for dir in input.directories:
             shell('cd {dir}; ./../../../{input.gamer}')
+
+# make diagnostic plots
+rule plots:
+    input:
+        directories=("initialize/templates/driven_amp{:05}".format(amp) for amp in driving_amps[4:]),
+    run:
+        for dir in input.directories:
+            print("Working in "+str(dir))
+            #try:
+            #    print("Making phase plots for the Mach number.")
+            #    post_processing.mach_number(path=dir, idx_start=1, idx_end=100, didx=1)
+
+            #except OSError:
+            #    print("Out of data, moving to next sim.")
+            #    pass
+            
+            for i in fields:
+                for j in ['x','y','z']:
+                    try:
+                        print("Making slice plots for "+str(i)+" along the "+str(j)+" axis.")
+                        post_processing.slice_plot(path=dir, field = i, axis = j, 
+                                                   idx_start=1, idx_end=100, didx=1) 
+                    except OSError:
+                        print("Out of data, moving to next sim.")
+                        pass 
+        print("Finished making all plots.") 
+
+# make gifs from plots
+rule gifs:
+    input:
+        directories=("initialize/templates/driven_amp{:05}".format(amp) for amp in driving_amps),
+	home="/dpool/cwagner4/working/gamer_sims/turbulence"
+    output:
+        mach="2d-Profile_density_mach_number_cell_mass.gif",
+        densx="Slice_x_density.gif",
+        densy="Slice_y_density.gif",
+        densz="Slice_z_density.gif",
+        vmagx="Slice_x_velocity_magnitude.gif",
+        vmagy="Slice_y_velocity_magnitude.gif",
+        vmagz="Slice_z_velocity_magnitude.gif",
+        machx="Slice_x_mach_number.gif",
+        machy="Slice_y_mach_number.gif",
+        machz="Slice_z_mach_number.gif",
+    run:
+        for dir in input.directories:
+            for name in filenames:
+                print("Making "+str(name)+".gif")
+                shell('cd {dir}/images; pwd; convert -delay 15 -loop 0 *{name}.png {name}.gif; mv *.gif gifs; cd {input.home}')
