@@ -3,16 +3,16 @@ import numpy as np
 
 def slice_plot(path, field, axis, idx_start=1, idx_end=100, didx=1,):
     ts = yt.load([path+'/Data_%06d'%idx for idx in range(idx_start, idx_end+1, didx)])
-    ds1 = yt.load(path+'/Data_000001')
+    ds = yt.load(path+'/Data_000001')
 
-    cg = ds1.covering_grid(0, left_edge = [0.0, 0.0, 0.0], dims=[256, 256, 256])
+    cg = ds.covering_grid(0, left_edge = [0.0, 0.0, 0.0], dims=[256, 256, 256])
     cg.get_data(field)
     field_data = cg[field]
 
     field_min = field_data.min()
     field_max = field_data.max()
  
-    for ds in ts:
+    for ds in ts.piter():
         
         sz = yt.SlicePlot(ds, axis, field)
         try:
@@ -24,12 +24,12 @@ def slice_plot(path, field, axis, idx_start=1, idx_end=100, didx=1,):
                               time_format='t = {time:.4f} {units}')
         sz.set_zlim(field, field_min, field_max)
         sz.save(name=path+'/images/'+str(ds))
-        print("Saved file to "+path+'images'+str(ds)) 
+         
 def mach_number(path, idx_start=1, idx_end=100, didx=1,):
     ts = yt.load([path+'/Data_%06d'%idx for idx in range(idx_start, idx_end+1, didx)])
-    ds1 = yt.load(path+'/Data_000001')
+    ds = yt.load(path+'/Data_000001')
 
-    cg = ds1.covering_grid(0, left_edge = [0.0, 0.0, 0.0], dims=[256, 256, 256])
+    cg = ds.covering_grid(0, left_edge = [0.0, 0.0, 0.0], dims=[256, 256, 256])
     cg.get_data(["density","mach_number","cell_mass"])
     density_data = cg["density"]
     mach_number_data= cg["mach_number"]
@@ -42,7 +42,7 @@ def mach_number(path, idx_start=1, idx_end=100, didx=1,):
     cell_min = cell_mass_data.min()
     cell_max = cell_mass_data.max()
 
-    for ds in ts:
+    for ds in ts.piter():
 
         ad = ds.all_data()
         plot = yt.PhasePlot(ad, "density", "mach_number", ["cell_mass"], 
@@ -52,4 +52,3 @@ def mach_number(path, idx_start=1, idx_end=100, didx=1,):
         plot.set_ylim(mach_min, mach_max)
         plot.set_zlim("cell_mass",cell_min, cell_max)       
         plot.save(name=path+'/images/'+str(ds))
-        print("Saved file to "+path+'images'+str(ds)) 

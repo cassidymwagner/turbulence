@@ -11,10 +11,9 @@ import post_processing
 HTTP = HTTPRemoteProvider()
 
 driving_amps = list(10**(np.linspace(-5,5,11)))
-fields = ['density','velocity_magnitude','mach_number']
+fields = ['density','velocity_magnitude']
 filenames = ['2d-Profile_density_mach_number_cell_mass','Slice_x_density','Slice_x_velocity_magnitude',
-             'Slice_x_mach_number','Slice_y_density','Slice_y_velocity_magnitude','Slice_y_mach_number',
-             'Slice_z_density','Slice_z_velocity_magnitude','Slice_z_mach_number']
+             'Slice_y_density','Slice_y_velocity_magnitude','Slice_z_density','Slice_z_velocity_magnitude']
 
 def create_templates(parameters, dest_path):
     for fn in glob.glob("initialize/*.template"):
@@ -72,13 +71,13 @@ rule plots:
     run:
         for dir in input.directories:
             print("Working in "+str(dir))
-            #try:
-            #    print("Making phase plots for the Mach number.")
-            #    post_processing.mach_number(path=dir, idx_start=1, idx_end=100, didx=1)
+            try:
+                print("Making phase plots for the Mach number.")
+                post_processing.mach_number(path=dir, idx_start=1, idx_end=100, didx=1)
 
-            #except OSError:
-            #    print("Out of data, moving to next sim.")
-            #    pass
+            except OSError:
+                print("Out of data, moving to next sim.")
+                pass
             
             for i in fields:
                 for j in ['x','y','z']:
@@ -103,10 +102,7 @@ rule gifs:
         densz="Slice_z_density.gif",
         vmagx="Slice_x_velocity_magnitude.gif",
         vmagy="Slice_y_velocity_magnitude.gif",
-        vmagz="Slice_z_velocity_magnitude.gif",
-        machx="Slice_x_mach_number.gif",
-        machy="Slice_y_mach_number.gif",
-        machz="Slice_z_mach_number.gif",
+        vmagz="Slice_z_velocity_magnitude.gif"
     run:
         for dir in input.directories:
             for name in filenames:
